@@ -1,7 +1,7 @@
 import sys
 
 
-BASE_URL = 'https://dashboard.iotinspector.org'
+BASE_URL = 'http://localhost:8080'
 
 NEW_USER_URL = BASE_URL + '/generate_user_key'
 

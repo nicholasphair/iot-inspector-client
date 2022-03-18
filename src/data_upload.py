@@ -228,7 +228,7 @@ class DataUploader(object):
             utils.log('[UPLOAD]', status_text)
 
             # Upload data via POST
-            response = requests.post(url, data=post_data).text
+            response = requests.post(url, json=post_data).text
             
             try:
                 utils.log("logging response.")
