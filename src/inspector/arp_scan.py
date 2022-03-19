@@ -6,12 +6,10 @@ import scapy.all as sc
 import threading
 import time
 
-from host_state import HostState
-import utils
-
+from .host_state import HostState
+from . import utils
 
 # pylint: disable=no-member
-
 
 FAST_SCAN_SLEEP_TIME = 0.1
 SLOW_SCAN_SLEEP_TIME = 0.5

@@ -8,13 +8,11 @@ import scapy.all as sc
 import threading
 import time
 
-from host_state import HostState
-from parse_available_ports import get_port_list
-import utils
-
+from .host_state import HostState
+from .parse_available_ports import get_port_list
+from . import utils
 
 # pylint: disable=no-member
-
 
 SYN_SCAN_SOURCE_PORT = 44444
 SYN_SCAN_SEQ_NUM = 44444
@@ -63,10 +61,7 @@ class SynScan(object):
             if len(ip_list) == 0:
                 continue
 
-            utils.log('[SYN Scanning] Start scanning {} ports over IPs: {}'.format(
-                len(port_list),
-                ', '.join(ip_list)
-            ))
+            utils.log('[SYN Scanning] Start scanning {} ports over IPs: {}'.format(len(port_list), ', '.join(ip_list)))
 
             host_ip = self._host_state.host_ip
             host_mac = self._host_state.host_mac
@@ -77,7 +72,7 @@ class SynScan(object):
 
                 syn_pkt = sc.IP(src=host_ip, dst=ip) / \
                     sc.TCP(dport=port, sport=SYN_SCAN_SOURCE_PORT, flags="S", seq=SYN_SCAN_SEQ_NUM)
-                
+
                 # print(syn_pkt.route())
 
                 sc.send(syn_pkt, iface=sc.conf.iface, verbose=0)

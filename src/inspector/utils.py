@@ -2,7 +2,6 @@
 Misc functions.
 
 """
-import ipaddress
 
 import datetime
 import hashlib
@@ -14,7 +13,6 @@ import re
 import requests
 import scapy.all as sc
 import socket
-import subprocess
 import sys
 import threading
 import time
@@ -22,8 +20,7 @@ import traceback
 import uuid
 import webbrowser
 
-import server_config
-
+from .inspector import server_config
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
@@ -35,7 +32,6 @@ TEST_OUI_LIST = [
     # 'd83134',  # Roku
     # '74f61c',  # Danny's Pixel phone
 ]
-
 
 # Make sure Inspector's directory exits
 home_dir = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector')
@@ -51,11 +47,7 @@ def is_ipv4_addr(value):
 def get_user_config():
     """Returns the user_config dict."""
 
-    user_config_file = os.path.join(
-        os.path.expanduser('~'),
-        'princeton-iot-inspector',
-        'iot_inspector_config.json'
-    )
+    user_config_file = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'iot_inspector_config.json')
 
     try:
         with open(user_config_file) as fp:
@@ -77,10 +69,7 @@ def get_user_config():
     secret_salt = str(uuid.uuid4())
 
     with open(user_config_file, 'w') as fp:
-        config_dict = {
-            'user_key': user_key,
-            'secret_salt': secret_salt
-        }
+        config_dict = {'user_key': user_key, 'secret_salt': secret_salt}
         json.dump(config_dict, fp)
 
     return config_dict
@@ -98,14 +87,11 @@ def log(*args):
     log_str = '[%s] ' % datetime.datetime.today()
     log_str += ' '.join([str(v) for v in args])
 
-    log_file_path = os.path.join(
-        os.path.expanduser('~'),
-        'princeton-iot-inspector',
-        'iot_inspector_logs.txt'
-    )
+    log_file_path = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'iot_inspector_logs.txt')
 
     with open(log_file_path, 'a') as fp:
         fp.write(log_str + '\n')
+
 
 def get_gateway_ip(timeout=10):
     """Returns the IP address of the gateway."""
@@ -133,7 +119,7 @@ def _get_routes():
 
 def get_default_route():
     """Returns (gateway_ip, iface, host_ip)."""
-    # Discover the active/preferred network interface 
+    # Discover the active/preferred network interface
     # by connecting to Google's public DNS server
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -158,11 +144,10 @@ def get_default_route():
 
         log('get_default_route: retrying')
         time.sleep(1)
-    
 
     # If we are using windows, conf.route.routes table doesn't update.
     # We have to update routing table manually for packets
-    # to pick the correct route. 
+    # to pick the correct route.
     if sys.platform.startswith('win'):
         for i, route in enumerate(routes):
             # if we see our selected iface, update the metrics to 0
@@ -183,12 +168,13 @@ def get_network_ip_range_windows():
         if v[0]['addr'] == iface_ip:
             netmask = v[0]['netmask']
             break
-  
+
     network = netaddr.IPAddress(iface_ip)
     cidr = netaddr.IPAddress(netmask).netmask_bits()
     subnet = netaddr.IPNetwork('{}/{}'.format(network, cidr))
-  
+
     return ip_set
+
 
 def check_ethernet_network():
     """
@@ -211,7 +197,6 @@ def check_ethernet_network():
     except KeyError:
         return False
     return iface_mac != ''
-
 
 
 def get_network_ip_range():
@@ -284,6 +269,9 @@ class _SafeRunError(object):
     def __init__(self):
         pass
 
+    def __bool__(self):
+        return False
+
 
 def restart_upon_crash(func, args=[], kwargs={}):
     """Restarts func upon unexpected exception and logs stack trace."""
@@ -326,6 +314,7 @@ def get_device_id(device_mac, host_state):
     s = device_mac + str(host_state.secret_salt)
 
     return 's' + hashlib.sha256(s.encode('utf-8')).hexdigest()[0:10]
+
 
 def smart_max(v1, v2):
     """
@@ -415,5 +404,7 @@ def open_browser(url):
 def test():
     # check_ethernet_network()
     print(get_default_route())
+
+
 if __name__ == '__main__':
     test()

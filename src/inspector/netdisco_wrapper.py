@@ -2,20 +2,15 @@
 Periodically start netdisco and extract naming info about the network.
 
 """
-import json
-import requests
-import stat
-import subprocess
 
 from netdisco.discovery import NetworkDiscovery
 import os
 import threading
 import time
 
-import utils
+from . import utils
 
-BASE_BINARY_PATH = 'https://github.com/noise-lab/netdisco-python-wrapper/raw/master/release/device_identifier_{os}'  # noqa
-
+BASE_BINARY_PATH = 'https://github.com/noise-lab/netdisco-python-wrapper/raw/master/release/device_identifier_{os}'    # noqa
 
 DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 
@@ -45,10 +40,7 @@ class NetdiscoWrapper(object):
 
         exe_name = 'iot-inspector-netdisco'
 
-        return os.path.join(
-            os.path.expanduser('~'),
-            'princeton-iot-inspector',
-            exe_name)
+        return os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', exe_name)
 
     def _run_netdisco(self, netdis):
         netdis.scan()
@@ -56,14 +48,14 @@ class NetdiscoWrapper(object):
             # get_info() could return a list of devices
             for device_info in netdis.get_info(device_type):
                 device_ip = device_info['host']
-                device_info['device_type'] = device_type 
-                
+                device_info['device_type'] = device_type
+
                 # Find MAC based on IP
                 try:
                     with self._host_state.lock:
                         device_mac = self._host_state.ip_mac_dict[device_ip]
                 except KeyError:
-                    continue 
+                    continue
 
                 # Get device_id based on MAC
                 device_id = utils.get_device_id(device_mac, self._host_state)
@@ -74,6 +66,7 @@ class NetdiscoWrapper(object):
                         .setdefault(device_id, []).append(device_info)
 
         netdis.stop()
+
 
 def test():
     n = NetdiscoWrapper(None)

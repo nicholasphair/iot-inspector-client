@@ -4,10 +4,8 @@ import signal
 import sys
 import time
 
-import inspector
+from src.inspector import inspector, server_config, utils
 import scapy.all as sc
-import server_config
-import utils
 
 
 def main():

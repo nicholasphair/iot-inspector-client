@@ -6,10 +6,8 @@ import scapy.all as sc
 import threading
 import time
 
-from host_state import HostState
-import utils
-import sys
-
+from .host_state import HostState
+from . import utils
 
 # Min seconds between successive spoofed packets
 MIN_ARP_SPOOF_INTERVAL = 0.01
@@ -65,10 +63,9 @@ class ArpSpoof(object):
 
             utils.log('[ARP Spoof] Cache: {} devices, {}'.format(len(ip_mac_dict), ip_mac_dict))
             len_of_whitelist = len(self._host_state.device_whitelist)
-            utils.log(
-                '[ARP Spoof] Whitelist:{} devices, {}'.format(len_of_whitelist, self._host_state.device_whitelist)
-            )
-            
+            utils.log('[ARP Spoof] Whitelist:{} devices, {}'.format(len_of_whitelist,
+                                                                    self._host_state.device_whitelist))
+
             # Get gateway MAC addr
             try:
                 gateway_mac = ip_mac_dict[gateway_ip]
@@ -87,7 +84,7 @@ class ArpSpoof(object):
                     utils.log('[ARP Spoof] Ignore:', ip, mac)
                     continue
                 whitelist_ip_mac.append((ip, mac))
-            
+
             # print('Spoof devices:', whitelist_ip_mac)
 
             # Spoof individual devices on the network.
@@ -108,10 +105,7 @@ class ArpSpoof(object):
                     if victim_mac_oui not in utils.TEST_OUI_LIST:
                         continue
 
-                utils.safe_run(
-                    self._arp_spoof,
-                    args=(victim_mac, victim_ip, whitelist_ip_mac)
-                )
+                utils.safe_run(self._arp_spoof, args=(victim_mac, victim_ip, whitelist_ip_mac))
 
                 with self._lock:
                     if not self._active:
@@ -130,7 +124,7 @@ class ArpSpoof(object):
 
             if victim_ip == dest_ip:
                 continue
-            # send ARP spoof request to destination 
+            # send ARP spoof request to destination
             # victim -> host -> destination
             dest_arp = sc.ARP()
             dest_arp.op = 1

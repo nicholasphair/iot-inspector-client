@@ -2,13 +2,11 @@
 Global shared state about the host.
 
 """
-import sys
 
 import threading
 import time
 
-import utils
-
+from . import utils
 
 CLIENT_VERSION = '1.0.3'
 
@@ -24,27 +22,27 @@ class HostState(object):
         self.user_key = None
         self.secret_salt = None
         self.client_version = CLIENT_VERSION
-        self.persistent_mode = True  # Always persistent to remove local Flask
-        self.raspberry_pi_mode = False  # If true, app does not auto-quit upon UI inactivity
+        self.persistent_mode = True    # Always persistent to remove local Flask
+        self.raspberry_pi_mode = False    # If true, app does not auto-quit upon UI inactivity
 
         # The following objects might be modified concurrently.
         self.lock = threading.Lock()
-        self.ip_mac_dict = {}  # IP -> MAC
-        self.pending_dhcp_dict = {}  # device_id -> hostname
-        self.pending_resolver_dict = {}  # device_id -> resolver_ip
-        self.pending_dns_dict = {}  # (device_id, domain) -> ip_set
-        self.pending_flow_dict = {}  # flow_key -> flow_stats
-        self.pending_ua_dict = {}  # device_id -> ua_set
-        self.pending_tls_dict_list = []  # List of tls_dict
-        self.pending_netdisco_dict = {}  # device_id -> device_info_list
-        self.pending_syn_scan_dict = {}  # device_id -> port_list
+        self.ip_mac_dict = {}    # IP -> MAC
+        self.pending_dhcp_dict = {}    # device_id -> hostname
+        self.pending_resolver_dict = {}    # device_id -> resolver_ip
+        self.pending_dns_dict = {}    # (device_id, domain) -> ip_set
+        self.pending_flow_dict = {}    # flow_key -> flow_stats
+        self.pending_ua_dict = {}    # device_id -> ua_set
+        self.pending_tls_dict_list = []    # List of tls_dict
+        self.pending_netdisco_dict = {}    # device_id -> device_info_list
+        self.pending_syn_scan_dict = {}    # device_id -> port_list
         self.status_text = None
         self.device_whitelist = []
         self.has_consent = False
         self.byte_count = 0
         self.is_inspecting_traffic = True
-        self.fast_arp_scan = True  # Persists for first 5 mins
-        self.last_ui_contact_ts = time.time()  # ts of /is_inspecting_traffic
+        self.fast_arp_scan = True    # Persists for first 5 mins
+        self.last_ui_contact_ts = time.time()    # ts of /is_inspecting_traffic
         self.quit = False
         self.spoof_arp = True
 

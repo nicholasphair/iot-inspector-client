@@ -9,10 +9,9 @@ import threading
 import time
 import traceback
 
-from host_state import HostState
-import server_config
-import utils
-
+from .host_state import HostState
+from . import server_config
+from . import utils
 
 UPLOAD_INTERVAL = 5
 
@@ -45,9 +44,7 @@ class DataUploader(object):
         with self._host_state.lock:
             self._host_state.has_consent = True
 
-        self._update_ui_status(
-            'Continuously analyzing your network.\n'
-        )
+        self._update_ui_status('Continuously analyzing your network.\n')
 
         # Continuously upload data
         while True:
@@ -73,15 +70,10 @@ class DataUploader(object):
         # Send client's timezone to server
         ts = time.time()
 
-        utc_offset = int(
-            (datetime.datetime.fromtimestamp(ts) -
-                datetime.datetime.utcfromtimestamp(ts)).total_seconds()
-        )
+        utc_offset = int((datetime.datetime.fromtimestamp(ts) - datetime.datetime.utcfromtimestamp(ts)).total_seconds())
 
-        utc_offset_url = server_config.UTC_OFFSET_URL.format(
-            user_key=self._host_state.user_key,
-            offset_seconds=utc_offset
-        )
+        utc_offset_url = server_config.UTC_OFFSET_URL.format(user_key=self._host_state.user_key,
+                                                             offset_seconds=utc_offset)
 
         utils.log('[DATA] Update UTC offset:', utc_offset_url)
         status = requests.get(utc_offset_url).text.strip()
@@ -140,21 +132,15 @@ class DataUploader(object):
 
             # Compute unique byte count during this window using seq number
             for direction in ('inbound', 'outbound'):
-                flow_stats[direction + '_tcp_seq_range'] = get_seq_diff(
-                    flow_stats[direction + '_tcp_seq_min_max']
-                )
-                flow_stats[direction + '_tcp_ack_range'] = get_seq_diff(
-                    flow_stats[direction + '_tcp_ack_min_max']
-                )
+                flow_stats[direction + '_tcp_seq_range'] = get_seq_diff(flow_stats[direction + '_tcp_seq_min_max'])
+                flow_stats[direction + '_tcp_ack_range'] = get_seq_diff(flow_stats[direction + '_tcp_ack_min_max'])
 
                 # We use the original byte count or the sequence number as the
                 # final byte count (whichever is larger), although we should
                 # note the caveats of using TCP seq numbers to estimate flow
                 # size in packet_processor.py.
-                flow_stats[direction + '_byte_count'] = utils.smart_max(
-                    flow_stats[direction + '_byte_count'],
-                    flow_stats[direction + '_tcp_seq_range']
-                )
+                flow_stats[direction + '_byte_count'] = utils.smart_max(flow_stats[direction + '_byte_count'],
+                                                                        flow_stats[direction + '_tcp_seq_range'])
 
             # Keep raw values for internal book-keeping
             internal_stats = {}
@@ -187,7 +173,7 @@ class DataUploader(object):
                 'syn_originator': flow_stats['syn_originator']
             }
             flow_dict[flow_key].update(internal_stats)
-       
+
         with self._host_state.lock:
             status_text = self._host_state.status_text
 
@@ -229,10 +215,10 @@ class DataUploader(object):
 
             # Upload data via POST
             response = requests.post(url, json=post_data).text
-            
+
             try:
                 utils.log("logging response.")
-                utils.log('[UPLOAD] Post data to server: ', post_data) # Uncomment this in debug
+                utils.log('[UPLOAD] Post data to server: ', post_data)    # Uncomment this in debug
                 utils.log('\n[UPLOAD] Gets back server response:', response)
                 response_dict = json.loads(response)
 
@@ -256,39 +242,33 @@ class DataUploader(object):
                     ui_last_active_ts = response_dict['ui_last_active_ts']
                 except KeyError:
                     ui_last_active_ts = 0
-                if ui_last_active_ts > 0: 
+                if ui_last_active_ts > 0:
                     ui_inactivity_time = int(time.time() - ui_last_active_ts)
                     if ui_inactivity_time > 120 and not self._host_state.raspberry_pi_mode:
                         utils.log('[UPLOAD] About to quit, due to 120 seconds of UI inactivity.')
                         with self._host_state.lock:
                             self._host_state.quit = True
 
-                if response_dict['status'] == 'success':                    
+                if response_dict['status'] == 'success':
                     # Update whitelist based on server's response
                     with self._host_state.lock:
                         self._host_state.device_whitelist = \
                             response_dict['inspected_devices']
                         break
-                
+
             except Exception:
                 utils.log('[UPLOAD] Failed. Retrying:', traceback.format_exc())
-            time.sleep((attempt + 1) ** 2)
+            time.sleep((attempt + 1)**2)
 
         # Report stats to UI
         with self._host_state.lock:
             byte_count = self._host_state.byte_count
             self._host_state.byte_count = 0
 
-        self._update_ui_status(
-            'Currently analyzing ' +
-            '{:,}'.format(int(byte_count * 8.0 / 1000.0 / window_duration)) +
-            ' Kbps of traffic'
-        )
+        self._update_ui_status('Currently analyzing ' +
+                               '{:,}'.format(int(byte_count * 8.0 / 1000.0 / window_duration)) + ' Kbps of traffic')
 
-        utils.log(
-            '[UPLOAD] Total bytes in past epoch:',
-            byte_count
-        )
+        utils.log('[UPLOAD] Total bytes in past epoch:', byte_count)
 
     def _update_ui_status(self, value):
 
@@ -329,7 +309,7 @@ def get_seq_diff(seq_tuple):
     # Seq wrap-around
     diff = seq_max - seq_min
     if diff < 0:
-        diff += 2 ** 32
+        diff += 2**32
 
     return diff
 

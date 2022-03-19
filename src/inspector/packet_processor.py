@@ -8,10 +8,9 @@ import scapy.layers.http as http
 import re
 import time
 
-from host_state import HostState
-from syn_scan import SYN_SCAN_SEQ_NUM, SYN_SCAN_SOURCE_PORT
-import utils
-
+from .host_state import HostState
+from .syn_scan import SYN_SCAN_SEQ_NUM, SYN_SCAN_SOURCE_PORT
+from . import utils
 
 # pylint: disable=no-member
 
@@ -53,8 +52,7 @@ class PacketProcessor(object):
 
         # Include only devices for internal testing (if set)
         if utils.TEST_OUI_LIST:
-            if not (src_oui in utils.TEST_OUI_LIST or
-                    dst_oui in utils.TEST_OUI_LIST):
+            if not (src_oui in utils.TEST_OUI_LIST or dst_oui in utils.TEST_OUI_LIST):
                 return
 
         # Ignore traffic to and from this host's IP
@@ -108,9 +106,7 @@ class PacketProcessor(object):
             port_list = self._host_state.pending_syn_scan_dict.setdefault(device_id, [])
             if device_port not in port_list:
                 port_list.append(device_port)
-                utils.log('[SYN Scan Debug] Device {} ({}): Port {}'.format(
-                    pkt[sc.IP].src, device_id, device_port
-                ))
+                utils.log('[SYN Scan Debug] Device {} ({}): Port {}'.format(pkt[sc.IP].src, device_id, device_port))
 
     def _process_dhcp(self, pkt):
         """
@@ -118,9 +114,7 @@ class PacketProcessor(object):
 
         """
         try:
-            option_dict = dict(
-                [t for t in pkt[sc.DHCP].options if isinstance(t, tuple)]
-            )
+            option_dict = dict([t for t in pkt[sc.DHCP].options if isinstance(t, tuple)])
 
         except Exception:
             return
@@ -161,14 +155,12 @@ class PacketProcessor(object):
                         device_mac = self._host_state.ip_mac_dict[device_ip]
                     except KeyError:
                         return
-                    device_id = utils.get_device_id(
-                        device_mac, self._host_state)
+                    device_id = utils.get_device_id(device_mac, self._host_state)
 
                 self._host_state.pending_resolver_dict[device_id] = \
                     resolver_ip
 
-                utils.log(
-                    '[UPLOAD] DHCP Resolver:', device_id, '-', resolver_ip)
+                utils.log('[UPLOAD] DHCP Resolver:', device_id, '-', resolver_ip)
 
     def _process_dns(self, pkt):
 
@@ -260,7 +252,7 @@ class PacketProcessor(object):
                 tcp_ack = tcp_layer.ack
         except Exception:
             pass
-       
+
         # Determine flow direction
         if src_mac == host_mac:
             direction = 'inbound'
@@ -282,8 +274,8 @@ class PacketProcessor(object):
 
         # Get remote device_id for internal book-keeping purpose
         remote_device_id = ''
-        remote_ip_is_inspector_host = 0 # True (1) or False (0)
-        remote_ip_is_gateway = 0 # True (1) or False (0)
+        remote_ip_is_inspector_host = 0    # True (1) or False (0)
+        remote_ip_is_gateway = 0    # True (1) or False (0)
         try:
             with self._host_state.lock:
                 real_remote_device_mac = self._host_state.ip_mac_dict[remote_ip]
@@ -296,9 +288,7 @@ class PacketProcessor(object):
             pass
 
         # Construct flow key
-        flow_key = (
-            device_id, device_port, remote_ip, remote_port, protocol
-        )
+        flow_key = (device_id, device_port, remote_ip, remote_port, protocol)
         flow_key_str = ':'.join([str(item) for item in flow_key])
 
         flow_ts = time.time()
@@ -339,10 +329,10 @@ class PacketProcessor(object):
 
         # Construct flow_stats
         flow_stats[direction + '_byte_count'] += len(pkt)
-        flow_stats[direction + '_tcp_seq_min_max'] = utils.get_min_max_tuple(
-            flow_stats[direction + '_tcp_seq_min_max'], tcp_seq)
-        flow_stats[direction + '_tcp_ack_min_max'] = utils.get_min_max_tuple(
-            flow_stats[direction + '_tcp_ack_min_max'], tcp_ack)
+        flow_stats[direction + '_tcp_seq_min_max'] = utils.get_min_max_tuple(flow_stats[direction + '_tcp_seq_min_max'],
+                                                                             tcp_seq)
+        flow_stats[direction + '_tcp_ack_min_max'] = utils.get_min_max_tuple(flow_stats[direction + '_tcp_ack_min_max'],
+                                                                             tcp_ack)
         flow_stats['internal_' + direction + '_pkt_count'] += 1
         flow_stats['internal_flow_ts_max'] = flow_ts
 
@@ -356,7 +346,7 @@ class PacketProcessor(object):
                     syn_originator = 'local'
         except Exception:
             pass
-        
+
         if syn_originator and flow_stats['syn_originator'] is None:
             flow_stats['syn_originator'] = syn_originator
 
@@ -381,7 +371,7 @@ class PacketProcessor(object):
             ua = pkt[http.HTTPRequest].fields['User_Agent'].decode('utf-8')
         except Exception as e:
             return
-        
+
         with self._host_state.lock:
             self._host_state \
                 .pending_ua_dict \
@@ -396,7 +386,7 @@ class PacketProcessor(object):
             http_host = pkt[http.HTTPRequest].fields['Host'].decode('utf-8')
         except Exception as e:
             return
-        
+
         device_port = pkt[sc.TCP].sport
 
         with self._host_state.lock:
@@ -454,11 +444,7 @@ def is_grease(int_value):
     first_byte = hex_str[0:2]
     last_byte = hex_str[-2:]
 
-    return (
-        first_byte[1] == 'a' and
-        last_byte[1] == 'a' and
-        first_byte == last_byte
-    )
+    return (first_byte[1] == 'a' and last_byte[1] == 'a' and first_byte == last_byte)
 
 
 def get_tls_dict(pkt, host_state):
@@ -528,8 +514,7 @@ def get_client_hello(pkt, layer):
         'version': version,
         'cipher_suites': cipher_suites,
         'cipher_suite_uses_grease': cipher_suite_uses_grease,
-        'compression_methods':
-            getattr(layer, 'compression_methods', None),
+        'compression_methods': getattr(layer, 'compression_methods', None),
         'extension_types': extension_types,
         'extension_details': repr(extensions),
         'extension_uses_grease': extension_uses_grease,

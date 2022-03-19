@@ -6,16 +6,16 @@ import logging
 import subprocess
 import sys
 
-from arp_scan import ArpScan
-from arp_spoof import ArpSpoof
-from data_upload import DataUploader
-from host_state import HostState
-from netdisco_wrapper import NetdiscoWrapper
-from packet_capture import PacketCapture
-from packet_processor import PacketProcessor
-import server_config
-from syn_scan import SynScan
-import utils
+from . import server_config
+from . import utils
+from .arp_scan import ArpScan
+from .arp_spoof import ArpSpoof
+from .data_upload import DataUploader
+from .host_state import HostState
+from .netdisco_wrapper import NetdiscoWrapper
+from .packet_capture import PacketCapture
+from .packet_processor import PacketProcessor
+from .syn_scan import SynScan
 
 
 WINDOWS_STARTUP_TEXT = """

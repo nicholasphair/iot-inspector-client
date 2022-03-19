@@ -6,8 +6,8 @@ import scapy.all as sc
 import threading
 import time
 
-from host_state import HostState
-import utils
+from .host_state import HostState
+from . import utils
 
 
 class PacketCapture(object):
@@ -38,15 +38,17 @@ class PacketCapture(object):
                 time.sleep(2)
                 continue
 
-            result = utils.safe_run(sc.sniff, kwargs={
-                'prn': self._host_state.packet_processor.process_packet,
-                'iface': sc.conf.iface,
-                'stop_filter':
-                    lambda _:
-                        not self._is_active() or
-                        not self._host_state.is_inspecting(),
-                'timeout': 30
-            })
+            result = utils.safe_run(sc.sniff,
+                                    kwargs={
+                                        'prn':
+                                        self._host_state.packet_processor.process_packet,
+                                        'iface':
+                                        sc.conf.iface,
+                                        'stop_filter':
+                                        lambda _: not self._is_active() or not self._host_state.is_inspecting(),
+                                        'timeout':
+                                        30
+                                    })
 
             if isinstance(result, utils._SafeRunError):
                 time.sleep(1)
