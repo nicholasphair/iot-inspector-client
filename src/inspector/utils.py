@@ -20,7 +20,7 @@ import traceback
 import uuid
 import webbrowser
 
-from .inspector import server_config
+from . import server_config
 
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
@@ -48,6 +48,7 @@ def get_user_config():
     """Returns the user_config dict."""
 
     user_config_file = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'iot_inspector_config.json')
+    db_file = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'inspector.db')
 
     try:
         with open(user_config_file) as fp:
@@ -69,7 +70,7 @@ def get_user_config():
     secret_salt = str(uuid.uuid4())
 
     with open(user_config_file, 'w') as fp:
-        config_dict = {'user_key': user_key, 'secret_salt': secret_salt}
+        config_dict = {'user_key': user_key, 'secret_salt': secret_salt, 'db_file': db_file}
         json.dump(config_dict, fp)
 
     return config_dict
@@ -399,6 +400,15 @@ def open_browser(url):
             webbrowser.open(url, new=2)
     except Exception:
         pass
+
+
+def deserialize_data(data: dict):
+    d = {k: json.loads(v) for k, v in data.items() if k.endswith('dict')}
+    for k in data.keys():
+        if not k.endswith('dict'):
+            d[k] = data[k]
+
+    return d
 
 
 def test():

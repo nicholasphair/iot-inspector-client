@@ -18,7 +18,7 @@ UPLOAD_INTERVAL = 5
 
 class DataUploader(object):
 
-    def __init__(self, host_state):
+    def __init__(self, host_state, queue):
 
         assert isinstance(host_state, HostState)
         self._host_state = host_state
@@ -30,6 +30,9 @@ class DataUploader(object):
         self._thread.daemon = True
 
         self._last_upload_ts = time.time()
+
+        # publish data
+        self._queue = queue
 
     def _upload_thread(self):
 
@@ -202,6 +205,8 @@ class DataUploader(object):
 
         if window_duration < 1:
             return
+
+        self._queue.put(post_data, block=False)
 
         # Try uploading across 5 attempts
         for attempt in range(5):

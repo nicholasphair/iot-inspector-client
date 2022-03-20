@@ -5,12 +5,15 @@ Entry point for Inspector UI.
 import logging
 import subprocess
 import sys
+import sqlite3
+from queue import Queue
 
 from . import server_config
 from . import utils
 from .arp_scan import ArpScan
 from .arp_spoof import ArpSpoof
 from .data_upload import DataUploader
+from .db_dumper import DBDumper
 from .host_state import HostState
 from .netdisco_wrapper import NetdiscoWrapper
 from .packet_capture import PacketCapture
@@ -94,8 +97,13 @@ def start():
         arp_spoof_thread.start()
 
     # Continuously upload data
-    data_upload_thread = DataUploader(state)
+    to_db_queue = Queue()
+    data_upload_thread = DataUploader(state, to_db_queue)
     data_upload_thread.start()
+
+    # Write data to db.
+    db_dump_thread = DBDumper(config_dict['db_file'], to_db_queue)
+    db_dump_thread.start()
 
     # Suppress scapy warnings
     try:
