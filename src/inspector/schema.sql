@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS devices (
-  device_id text primary key,
+  user_key text primary key,
+  device_id text,
   dhcp_hostname text,
-  user_key text,
   device_ip text,
   device_name text,
   device_type text,
