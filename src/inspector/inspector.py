@@ -14,6 +14,7 @@ from .arp_scan import ArpScan
 from .arp_spoof import ArpSpoof
 from .data_upload import DataUploader
 from .db_dumper import DBDumper
+from .fingerprinter import Fingerprinter
 from .host_state import HostState
 from .netdisco_wrapper import NetdiscoWrapper
 from .packet_capture import PacketCapture
@@ -102,8 +103,14 @@ def start():
     data_upload_thread.start()
 
     # Write data to db.
-    db_dump_thread = DBDumper(config_dict['db_file'], to_db_queue)
+    db_name = config_dict['db_file']
+    db_dump_thread = DBDumper(db_name, to_db_queue)
     db_dump_thread.start()
+
+    # Fingerprint the data.
+    fp_thread = Fingerprinter(state, db_name)
+    fp_thread.start()
+
 
     # Suppress scapy warnings
     try:

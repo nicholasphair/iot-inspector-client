@@ -62,6 +62,7 @@ class DBDumper(object):
         self._write_to_db(ddata)
 
     def _write_to_db(self, data):
+        if data: print(data)
         client_status_text = data['client_status_text']
         dns_dict = data['dns_dict']
         syn_scan_dict = data['syn_scan_dict']
@@ -76,7 +77,6 @@ class DBDumper(object):
         duration = data['duration']
         client_ts = data['client_ts']
 
-        print(netdisco_dict)
         for device, items in netdisco_dict.items():
             for ndd in items:
                 device_id = ndd['serial']
