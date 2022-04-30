@@ -1,6 +1,6 @@
 import pytest
 import sqlite3
-from src.inspector.db_dumper import DBDumper
+from src.inspector.dbdumper import DBDumper
 
 
 class TestDBDumper:

@@ -32,7 +32,7 @@ class DBDumper(object):
         self._queue = queue
 
     def _upload_thread(self):
-        self._conn = sqlite3.connect(self._dbname)
+        self._conn = sqlite3.connect(self._dbname, check_same_thread=False)
 
         while not utils.safe_run(self._init_db):
             time.sleep(2)
@@ -62,6 +62,9 @@ class DBDumper(object):
         self._write_to_db(ddata)
 
     def _write_to_db(self, data):
+        #         device_id and device_name in the devices table
+        # device_id, ts, and hostname in the dns table
+        # device_id, device_port, in_byte_count, out_byte_count, remote_port, and ts from flows
         if data: print(data)
         client_status_text = data['client_status_text']
         dns_dict = data['dns_dict']
@@ -79,18 +82,16 @@ class DBDumper(object):
 
         for device, items in netdisco_dict.items():
             for ndd in items:
-                device_id = ndd['serial']
-                dhcp_hostname = ndd['host']
-                user_key = f'nphair_test_{str(uuid.uuid4()).replace("-", "")}'
-                device_ip = ndd['host']
-                device_name = ndd['model_name']
-                device_type = ndd['upnp_device_type']
-                device_vendor = ndd['manufacturer']
+                device_id = ndd.get('serial')
+                dhcp_hostname = ndd.get('host')
+                device_ip = ndd.get('host')
+                device_name = ndd.get('model_name')
+                device_type = ndd.get('upnp_device_type')
+                device_vendor = ndd.get('manufacturer')
                 device_oui = device
-                netdisco_name = ndd['name']
+                netdisco_name = ndd.get('name')
                 fb_name = 'baz'
                 vals = ', '.join((
-                    f"'{user_key}'",
                     f"'{device_id}'",
                     f"'{dhcp_hostname}'",
                     f"'{device_ip}'",
@@ -98,8 +99,11 @@ class DBDumper(object):
                     f"'{device_type}'",
                     f"'{device_vendor}'",
                     f"'{device_oui}'",
-                    f"'{netdisco_name}'",
-                    f"'{fb_name}'",
+                    f"'ua_list'",    # TODO
+                    f"0",    # TODO
+                    f"0",    # TODO
+                    f"{client_ts}",
+                    f"0",    # TODO
                 ))
                 self._conn.execute(f"INSERT INTO devices VALUES ({vals})")
         self._conn.commit()

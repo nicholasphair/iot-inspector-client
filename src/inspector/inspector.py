@@ -5,7 +5,6 @@ Entry point for Inspector UI.
 import logging
 import subprocess
 import sys
-import sqlite3
 from queue import Queue
 
 from . import server_config
@@ -13,8 +12,9 @@ from . import utils
 from .arp_scan import ArpScan
 from .arp_spoof import ArpSpoof
 from .data_upload import DataUploader
-from .db_dumper import DBDumper
 from .fingerprinter import Fingerprinter
+from .securecomputer import SecureComputer
+from .dbdumper import DBDumper
 from .host_state import HostState
 from .netdisco_wrapper import NetdiscoWrapper
 from .packet_capture import PacketCapture
@@ -110,6 +110,10 @@ def start():
     # Fingerprint the data.
     fp_thread = Fingerprinter(state, db_name)
     fp_thread.start()
+
+    # Compute on the data.
+    smpc_thread = SecureComputer(db_name)
+    smpc_thread.start()
 
 
     # Suppress scapy warnings

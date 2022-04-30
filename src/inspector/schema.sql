@@ -1,18 +1,24 @@
 CREATE TABLE IF NOT EXISTS devices (
-  user_key text primary key,
   device_id text,
   dhcp_hostname text,
-  device_ip text,
-  device_name text,
-  device_type text,
-  device_vendor text,
-  device_oui text,
-  netdisco_name text,
-  fb_name text
+  user_key string,
+  device_ip string,
+  device_name string,
+  device_type string,
+  device_vendor string,
+  device_oui string,
+  ua_list string,
+  suspected_pc integer,
+  ts integer,
+  is_inspected integer
+);
+
+CREATE INDEX IF NOT EXISTS devices_devid ON devices (
+  device_id
 );
 
 CREATE TABLE IF NOT EXISTS dns (
-  user_key text primary key,
+  user_key text,
   device_id text,
   ts integer,
   ip text,
@@ -21,37 +27,35 @@ CREATE TABLE IF NOT EXISTS dns (
   data_source text
 );
 
-CREATE TABLE IF NOT EXISTS tls(
-  device_id text primary key,
-  user_key text,
-  ts integer,
-  version integer,
-  sni text,
-  device_ip text,
-  device_port integer,
-  remote_ip text,
-  remote_port integer,
-  cipher_suites text,
-  cipher_suite_uses_grease text,
-  compression_methods text,
-  extension_types text,
-  extension_details text,
-  extension_uses_grease text
+CREATE INDEX IF NOT EXISTS dns_devid ON dns (
+  device_id
 );
 
 CREATE TABLE IF NOT EXISTS flows (
-  device_id text primary key,
-  user_key text,
-  ts integer,
-  client_ts float,
+  device_id text,
+  device_port integer,
+  in_byte_count real,
+  is_inspected integer,
+  out_byte_count real,
   protocol text,
-  remote_ip text,
   remote_hostname text,
+  remote_hostname_info_source text,
+  remote_ip text,
+  remote_ip_country text,
+  remote_port integer,
   remote_reg_domain text,
   remote_tracker text,
-  remote_port integer,
   remote_web_xray text,
-  device_port integer,
-  in_byte_count float,
-  out_byte_count float
+  total_byte_count real,
+  ts integer,
+  ts_min real,
+  ts_mod10 real,
+  ts_mod3600 real,
+  ts_mod60 real,
+  ts_mod600 real,
+  user_key text
+);
+
+CREATE INDEX IF NOT EXISTS flows_devid ON flows (
+  device_id
 );

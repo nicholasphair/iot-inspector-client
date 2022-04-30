@@ -23,10 +23,8 @@ def main():
     # Check for Windows
     if utils.get_os() == 'windows':
 
-        # Check Npcap installation 
-        npcap_path = os.path.join(
-            os.environ['WINDIR'], 'System32', 'Npcap'
-        )
+        # Check Npcap installation
+        npcap_path = os.path.join(os.environ['WINDIR'], 'System32', 'Npcap')
         if not os.path.exists(npcap_path):
             sys.stderr.write("IoT Inspector cannot run without installing Npcap.\n")
             sys.stderr.write("For details, visit " + server_config.NPCAP_ERROR_URL)
@@ -47,7 +45,7 @@ def main():
 
     utils.log('[Main] Starting inspector.')
     inspector.enable_ip_forwarding()
-    
+
     # We don't wrap the function below in safe_run because, well, if it crashes,
     # it crashes.
     host_state = inspector.start()
@@ -93,11 +91,7 @@ def main():
 
 def get_pid_file():
 
-    pid_file = os.path.join(
-        os.path.expanduser('~'),
-        'princeton-iot-inspector',
-        'iot_inspector_pid.txt'
-    )
+    pid_file = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'iot_inspector_pid.txt')
 
     return pid_file
 
