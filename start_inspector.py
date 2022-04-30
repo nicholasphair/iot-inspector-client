@@ -67,8 +67,9 @@ def main():
     with host_state.lock:
         host_state.spoof_arp = False
 
-    for t in range(10):
-        print('Cleaning up ({})...'.format(10 - t))
+    wait_time = 5
+    for t in range(wait_time):
+        print('Cleaning up ({})...'.format(wait_time - t))
         time.sleep(1)
 
     inspector.disable_ip_forwarding()

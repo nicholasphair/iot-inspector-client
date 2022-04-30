@@ -103,7 +103,7 @@ def logger(sublogger: _t.Optional[str] = None) -> logging.Logger:
 
 def configure_logging(
     loglevel: int = logging.INFO,
-    file_loglevel: _t.Optional[int] = None,
+    file_loglevel: _t.Optional[int] = logging.DEBUG,
 ) -> None:
     """Set up the default logging configuration."""
 
