@@ -6,6 +6,8 @@ Misc functions.
 import datetime
 import hashlib
 import json
+import logging
+import logging.config
 import netaddr
 import netifaces
 import os
@@ -17,11 +19,14 @@ import sys
 import threading
 import time
 import traceback
+import typing as _t
 import uuid
 import webbrowser
 
 from . import server_config
+from pathlib import Path
 
+DEFAULT_LOGGER_NAME = "iot_inspector"
 IPv4_REGEX = re.compile(r'[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}\.[0-9]{0,3}')
 
 sc.conf.verb = 0
@@ -50,27 +55,30 @@ def get_user_config():
     user_config_file = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'iot_inspector_config.json')
     db_file = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'inspector.db')
 
-    try:
+    if os.path.exists(user_config_file):
         with open(user_config_file) as fp:
             return json.load(fp)
 
-    except Exception:
-        pass
+    resp = requests.get(server_config.NEW_USER_URL)
+    content = resp.text.strip()
 
-    while True:
-        user_key = requests.get(server_config.NEW_USER_URL).text.strip()
+    # Make sure we're not getting server's error messages
+    if resp.status_code != 200:
+        raise RuntimeError(
+            f"{server_config.NEW_USER_URL} returned code {resp.status_code}: {content!r}"
+        )
 
-        # Make sure we're not getting server's error messages
-        if len(user_key) == 32:
-            break
-
-        time.sleep(1)
-
+    user_key = content
     user_key = user_key.replace('-', '')
     secret_salt = str(uuid.uuid4())
 
     with open(user_config_file, 'w') as fp:
-        config_dict = {'user_key': user_key, 'secret_salt': secret_salt, 'db_file': db_file}
+        config_dict = {
+            'user_key': user_key,
+            'secret_salt': secret_salt,
+            'db_file': db_file,
+            'partner_interval': 5,
+        }
         json.dump(config_dict, fp)
 
     return config_dict
@@ -82,16 +90,67 @@ class TimeoutError(Exception):
 
 _lock = threading.Lock()
 
+def logger(sublogger: _t.Optional[str] = None) -> logging.Logger:
+    """Retrieve the default logger."""
 
-def log(*args):
+    if sublogger is None:
+        logger_name = DEFAULT_LOGGER_NAME
+    else:
+        logger_name = ".".join((DEFAULT_LOGGER_NAME, sublogger))
 
-    log_str = '[%s] ' % datetime.datetime.today()
-    log_str += ' '.join([str(v) for v in args])
+    return logging.getLogger(logger_name)
 
-    log_file_path = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'iot_inspector_logs.txt')
 
-    with open(log_file_path, 'a') as fp:
-        fp.write(log_str + '\n')
+def configure_logging(
+    loglevel: int = logging.INFO,
+    file_loglevel: _t.Optional[int] = None,
+) -> None:
+    """Set up the default logging configuration."""
+
+    logfile = Path.home() / "princeton-iot-inspector" / "iot_inspector_logs.txt"
+    file_loglevel = loglevel if file_loglevel is None else file_loglevel
+
+    logging.config.dictConfig({
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "standard": {
+                "format": "[%(asctime)s] (%(levelname)s) %(name)s: %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
+        },
+        "handlers": {
+            "stream": {
+                "level": loglevel,
+                "formatter": "standard",
+                "class": "logging.StreamHandler",
+            },
+            "logfile": {
+                "level": file_loglevel,
+                "formatter": "standard",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": str(logfile),
+                "maxBytes": 1_000_000,
+                "backupCount": 3,
+            },
+        },
+        "loggers": {
+            "": {
+                "handlers": ["stream"],
+                "level": "WARNING",
+                "propagate": True,
+            },
+            DEFAULT_LOGGER_NAME: {
+                "handlers": ["stream", "logfile"],
+                "level": "DEBUG",
+                "propagate": False,
+            },
+        },
+    })
+
+
+def log(*args, level: int = logging.DEBUG):
+    logger().log(level, " ".join(map(str, args)))
 
 
 def get_gateway_ip(timeout=10):

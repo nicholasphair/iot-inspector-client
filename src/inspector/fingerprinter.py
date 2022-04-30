@@ -10,7 +10,7 @@ import uuid
 
 from .host_state import HostState
 
-UPLOAD_INTERVAL = 5
+UPLOAD_INTERVAL = 60
 
 
 class Fingerprinter(object):

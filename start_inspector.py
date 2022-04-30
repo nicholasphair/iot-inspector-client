@@ -9,6 +9,7 @@ import scapy.all as sc
 
 
 def main():
+    utils.configure_logging()
     sc.load_layer("http")
     # The whole process should be run as root.
     try:

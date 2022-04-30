@@ -131,7 +131,7 @@ class DBDumper(object):
 
     def _write_to_db(self, data):
         if data:
-            print(data)
+            utils.logger().debug("data = %s", repr(data))
         client_status_text = data['client_status_text']
         dns_dict = data['dns_dict']
         syn_scan_dict = data['syn_scan_dict']

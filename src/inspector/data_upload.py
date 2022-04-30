@@ -13,7 +13,7 @@ from .host_state import HostState
 from . import server_config
 from . import utils
 
-UPLOAD_INTERVAL = 5
+UPLOAD_INTERVAL = 60
 
 
 class DataUploader(object):

@@ -4,7 +4,9 @@ Anonymizes and uploads DNS and flow data to cloud.
 """
 from pathlib import Path
 from queue import Empty
+import crypten
 import datetime
+import itertools
 import json
 import requests
 import sqlite3
@@ -33,10 +35,16 @@ class SecureComputer(object):
         self._config_dir = Path.home() / f'princeton-iot-inspector/.configs/{os.getpid()}'
         self._config_dir.mkdir(parents=True, exist_ok=True)
 
+    @property
+    def logger(self):
+        return utils.logger("secure_compute")
+
     def _compute_thread(self):
 
         while not utils.safe_run(self._init_db):
             time.sleep(2)
+
+        user_config = utils.get_user_config()
 
         while True:
             utils.log('[SecureCompute]', 'writing logs to db')
@@ -45,6 +53,8 @@ class SecureComputer(object):
                 if not self._active:
                     self._conn.close()
                     return
+
+            time.sleep(user_config["partner_interval"])
             utils.safe_run(self._compute)
 
     def _init_db(self):
@@ -65,7 +75,6 @@ class SecureComputer(object):
         if self._should_compute():
             utils.log('[SecureCompute]', f'Requesting a partner to compute with...')
             (self._config_dir / 'start_computation').unlink()
-            time.sleep(5)
             # Get Peers.
             # partner_response = requests.get(server_config.PARTNER_URL)
             # partner = partner_response.json()
@@ -79,11 +88,8 @@ class SecureComputer(object):
         elif  self._should_be_peer():
             # Do peer things.
             utils.log('[SecureCompute]', f'Waiting to help with a computation...')
-            time.sleep(5)
         else:
             utils.log('[SecureCompute]', f'No work to do...')
-            time.sleep(5)
-
 
 
     def start(self):
