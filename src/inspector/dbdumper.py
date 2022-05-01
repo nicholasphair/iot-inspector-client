@@ -149,6 +149,7 @@ class DBDumper(object):
         for device_id, items in netdisco_dict.items():
             for ndd in items:
                 dhcp_hostname = ndd.get('host')
+                user_key = f'test_{str(uuid.uuid4()).replace("-", "")}'
                 device_ip = ndd.get('host')
                 device_name = ndd.get('model_name')
                 device_type = ndd.get('upnp_device_type')
@@ -157,13 +158,13 @@ class DBDumper(object):
                 vals = ', '.join((
                     f"'{device_id}'",
                     f"'{dhcp_hostname}'",
+                    f"'{user_key}'",
                     f"'{device_ip}'",
                     f"'{device_name}'",
                     f"'{device_type}'",
                     f"'{device_vendor}'",
                     f"'{device_oui}'",
                     f"'ua_list'",    # TODO
-                    f"0",    # TODO
                     f"0",    # TODO
                     f"{client_ts}",
                     f"0",    # TODO
