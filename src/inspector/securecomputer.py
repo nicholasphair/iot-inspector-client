@@ -12,6 +12,7 @@ import threading
 import time
 import traceback
 import uuid
+import os
 
 from . import server_config
 from . import utils
@@ -28,6 +29,9 @@ class SecureComputer(object):
         self._thread.daemon = True
 
         self._dbname = dbname
+
+        self._config_dir = Path.home() / f'princeton-iot-inspector/.configs/{os.getpid()}'
+        self._config_dir.mkdir(parents=True, exist_ok=True)
 
     def _compute_thread(self):
 
@@ -51,22 +55,35 @@ class SecureComputer(object):
         self._conn = sqlite3.connect(self._dbname, check_same_thread=False)
         return True
 
+    def _should_compute(self):
+        return (self._config_dir / 'start_computation').exists()
+
+    def _should_be_peer(self):
+        return (self._config_dir / 'start_peer').exists()
 
     def _compute(self):
-        # Get Peers.
-        partner_response = requests.get(server_config.PARTNER_URL)
-        partner = partner_response.json()
-        if not partner.get('success'):
-            utils.log('[SecureCompute]', f'error. not enough peers to compute with')
-            return
+        if self._should_compute():
+            utils.log('[SecureCompute]', f'Requesting a partner to compute with...')
+            (self._config_dir / 'start_computation').unlink()
+            time.sleep(5)
+            # Get Peers.
+            # partner_response = requests.get(server_config.PARTNER_URL)
+            # partner = partner_response.json()
+            # if not partner.get('success'):
+            #     utils.log('[SecureCompute]', f'error. not enough peers to compute with')
+            #     return
+            # Get Model.
+            model_response = requests.get(server_config.MODEL_URL, stream=True)
+            # binary data can be read from the raw object...
+            # model_response.raw
+        elif  self._should_be_peer():
+            # Do peer things.
+            utils.log('[SecureCompute]', f'Waiting to help with a computation...')
+            time.sleep(5)
+        else:
+            utils.log('[SecureCompute]', f'No work to do...')
+            time.sleep(5)
 
-        # Get Model.
-        model_response = requests.get(server_config.MODEL_URL, stream=True)
-        # binary data can be read from the raw object...
-        # model_response.raw
-        time.sleep(10)
-
-        utils.log('[SecureCompute]', f'doing my computations...')
 
 
     def start(self):
@@ -85,6 +102,9 @@ class SecureComputer(object):
         with self._lock:
             self._active = False
 
+        (self._config_dir / 'start_computation').unlink()
+        (self._config_dir / 'start_peer').unlink()
+        self._config_dir.rmdir()
         self._thread.join()
 
         utils.log('[SecureCompute] Stopped.')
