@@ -122,7 +122,7 @@ class DBDumper(object):
         user_key = f'test_{str(uuid.uuid4()).replace("-", "")}'
         user_key = f"'{user_key}'"
         device_id = f"'{key[0]}'"
-        ts = "0"
+        ts = str(int(time.time_ns() / 1000))
         hostname = f"'{key[1]}'"
         ip = f"'{key[2]}'"
         device_port = str(key[3])
