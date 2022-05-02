@@ -1,3 +1,4 @@
+import argparse
 import ctypes
 import os
 import signal
@@ -5,8 +6,12 @@ import sys
 import time
 
 from src.inspector import inspector, server_config, utils
+from pathlib import Path
 import scapy.all as sc
 
+# Use a random file for the PID file so that multiple clients
+# can be started up
+PID_FILE = Path.home() / "princeton-iot-inspector" / ".pid" / f"{utils.UNIQUE_ID}.pid"
 
 def main():
     utils.configure_logging()
@@ -92,10 +97,7 @@ def main():
 
 
 def get_pid_file():
-
-    pid_file = os.path.join(os.path.expanduser('~'), 'princeton-iot-inspector', 'iot_inspector_pid.txt')
-
-    return pid_file
+    return PID_FILE
 
 
 def kill_existing_inspector():
@@ -103,6 +105,7 @@ def kill_existing_inspector():
     pid_file = get_pid_file()
 
     try:
+        pid_file.parent.mkdir(exist_ok=True)
         with open(pid_file) as fp:
             pid = int(fp.read().strip())
     except Exception:
@@ -129,4 +132,26 @@ def kill_existing_inspector():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog="start_inspector.py",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--peer",
+        help="Designate the client as a peer to assist in computation",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--initiator",
+        help="Designate the client as a model updater",
+        action="store_true",
+    )
+
+    args = parser.parse_args()
+
+    if args.peer:
+        (utils.home_dir / "start_peer").touch()
+    if args.initiator:
+        (utils.home_dir / "start_computation").touch()
+
     main()
