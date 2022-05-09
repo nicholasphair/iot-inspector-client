@@ -5,13 +5,13 @@ BASE_URL = 'http://localhost:8080'
 
 NEW_USER_URL = BASE_URL + '/generate_user_key'
 
-PARTNER_URL = BASE_URL + '/partner'
+PARTNER_URL = BASE_URL + '/partner/{user_key}'
 
 MODEL_URL = BASE_URL + '/model'
 
-SEPARATE = BASE_URL + '/separate'
+SEPARATE_URL = BASE_URL + '/separate/{user_key}'
 
-HEARTBEAT = BASE_URL + '/heartbeat'
+HEARTBEAT_URL = BASE_URL + '/heartbeat/{user_key}'
 
 SUBMIT_URL = BASE_URL + '/submit_data/{user_key}'
 
