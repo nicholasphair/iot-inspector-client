@@ -41,7 +41,7 @@ Questions? Email us at iot-inspector@lists.cs.princeton.edu.
 """
 
 
-def start():
+def start(open_browser: bool = False):
     """
     Initializes inspector by spawning a number of background threads.
     
@@ -148,7 +148,7 @@ def start():
     # For users that do not use chrome, the default browser will be opened in 
     # Windows 10, and Safari will be opened in macOS.
 
-    if os_platform == 'windows' or 'mac':
+    if os_platform in ('windows', 'mac') and open_browser:
         url = '{0}/user/{1}'.format(server_config.BASE_URL, pretty_user_key)
         utils.open_browser(url)
     return state

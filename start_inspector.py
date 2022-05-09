@@ -13,7 +13,7 @@ import scapy.all as sc
 # can be started up
 PID_FILE = Path.home() / "princeton-iot-inspector" / ".pid" / f"{utils.UNIQUE_ID}.pid"
 
-def main():
+def main(args):
     utils.configure_logging()
     sc.load_layer("http")
     # The whole process should be run as root.
@@ -54,7 +54,7 @@ def main():
 
     # We don't wrap the function below in safe_run because, well, if it crashes,
     # it crashes.
-    host_state = inspector.start()
+    host_state = inspector.start(open_browser=args.browser)
 
     # Waiting for termination
     while True:
@@ -146,6 +146,11 @@ if __name__ == '__main__':
         help="Designate the client as a model updater",
         action="store_true",
     )
+    parser.add_argument(
+        "--browser",
+        help="Open browser after launching the client",
+        action="store_true",
+    )
 
     args = parser.parse_args()
 
@@ -154,4 +159,4 @@ if __name__ == '__main__':
     if args.initiator:
         (utils.home_dir / "start_computation").touch()
 
-    main()
+    main(args)
